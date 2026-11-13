@@ -2,6 +2,7 @@ from datasets import load_dataset
 import random
 import numpy as np
 import logging
+import os
 
 
 def _get_wikitext2(split):
@@ -25,21 +26,37 @@ def _get_ptb(split, slice_unk=True):
 
 
 def _get_c4(split):
-    assert split in ['train', 'validation'], f"Unknown split {split} for c4"
+    assert split in ["train", "validation"], f"Unknown split {split} for c4"
 
-    if split == 'train':
+    cache_config = os.environ.get("DYNQUANT_C4_CACHE_CONFIG")
+
+    if split == "train" and cache_config:
+        logging.info(f"Loading C4 train from cached config: {cache_config}")
         data = load_dataset(
-            'allenai/c4', data_files={'train': 'en/c4-train.00000-of-01024.json.gz'}, split='train',
-            trust_remote_code=True
+            "allenai/c4",
+            name=cache_config,
+            split="train",
+        )
+    elif split == "train":
+        data = load_dataset(
+            "allenai/c4",
+            data_files={
+                "train": "en/c4-train.00000-of-01024.json.gz"
+            },
+            split="train",
+            trust_remote_code=True,
         )
     else:
-        assert split == 'validation'
         data = load_dataset(
-            'allenai/c4', data_files={'validation': 'en/c4-validation.00000-of-00008.json.gz'}, split='validation',
-            trust_remote_code=True
+            "allenai/c4",
+            data_files={
+                "validation": "en/c4-validation.00000-of-00008.json.gz"
+            },
+            split="validation",
+            trust_remote_code=True,
         )
 
-    return data['text']
+    return data["text"]
 
 
 def _get_pileval(split):
